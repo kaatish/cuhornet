@@ -142,7 +142,7 @@ struct DeviceCopy {
             const DeviceType src_device_type,
             T * const dst,
             const DeviceType dst_device_type,
-            const int num_items) {
+            const unsigned num_items) {
         if (src == nullptr) { return; }
         if ((src_device_type == DeviceType::DEVICE) &&
                 (dst_device_type == DeviceType::DEVICE)) {
@@ -171,9 +171,9 @@ struct RecursiveCopy {
             const DeviceType src_device_type,
             DstContnr<Ts...>& dst,
             const DeviceType dst_device_type,
-            const int num_items,
-            const int srcOffset = 0,
-            const int dstOffset = 0) {
+            const unsigned num_items,
+            const unsigned srcOffset = 0,
+            const unsigned dstOffset = 0) {
         DeviceCopy::copy(
                 src.template get<N>() + srcOffset, src_device_type,
                 dst.template get<N>() + dstOffset, dst_device_type,
@@ -191,9 +191,9 @@ struct RecursiveCopy {
             const DeviceType src_device_type,
             DstContnr<Ts...>& dst,
             const DeviceType dst_device_type,
-            const int num_items,
-            const int srcOffset = 0,
-            const int dstOffset = 0) {
+            const unsigned num_items,
+            const unsigned srcOffset = 0,
+            const unsigned dstOffset = 0) {
         DeviceCopy::copy(
                 src.template get<N>() + srcOffset, src_device_type,
                 dst.template get<N>() + dstOffset, dst_device_type,
@@ -214,9 +214,9 @@ struct RecursiveCopy<N, N> {
             DeviceType src_device_type,
             DstContnr<Ts...>& dst,
             DeviceType dst_device_type,
-            const int num_items,
-            const int srcOffset = 0,
-            const int dstOffset = 0) {
+            const unsigned num_items,
+            const unsigned srcOffset = 0,
+            const unsigned dstOffset = 0) {
         DeviceCopy::copy(
                 src.template get<N>() + srcOffset, src_device_type,
                 dst.template get<N>() + dstOffset, dst_device_type,
@@ -232,9 +232,9 @@ struct RecursiveCopy<N, N> {
             DeviceType src_device_type,
             DstContnr<Ts...>& dst,
             DeviceType dst_device_type,
-            const int num_items,
-            const int srcOffset = 0,
-            const int dstOffset = 0) {
+            const unsigned num_items,
+            const unsigned srcOffset = 0,
+            const unsigned dstOffset = 0) {
         DeviceCopy::copy(
                 src.template get<N>() + srcOffset, src_device_type,
                 dst.template get<N>() + dstOffset, dst_device_type,
@@ -331,7 +331,7 @@ SoARef<Contnr<Ts...>>::SoARef(const SoARef<Contnr<Ts...>>& other) noexcept : _so
 
 template<template <typename...> typename Contnr, typename... Ts>
 HOST_DEVICE
-SoARef<Contnr<Ts...>>::SoARef(Contnr<Ts...>& soa, const int& index) noexcept : _soa(soa), _index(index) { }
+SoARef<Contnr<Ts...>>::SoARef(Contnr<Ts...>& soa, const unsigned& index) noexcept : _soa(soa), _index(index) { }
 
 template<template <typename...> typename Contnr, typename... Ts>
 std::tuple<Ts...> getTuple(const SoARef<Contnr<Ts...>>& r) {
@@ -385,7 +385,7 @@ set(T* const ptr) noexcept {
 template<typename T>
 HOST_DEVICE
 SoARef<SoAPtr<T>> SoAPtr<T>::
-operator[](const int& index)  noexcept {
+operator[](const unsigned& index)  noexcept {
     return SoARef<SoAPtr<T>>(*this, index);
 }
 
@@ -462,7 +462,7 @@ template<typename T, typename... Ts>
 HOST_DEVICE
 SoARef<SoAPtr<T, Ts...>>
 SoAPtr<T, Ts...>::
-operator[](const int& index)  noexcept {
+operator[](const unsigned& index)  noexcept {
     return SoARef<SoAPtr<T, Ts...>>(*this, index);
 }
 
@@ -489,7 +489,7 @@ _ptr(nullptr), _num_items(0) {}
 template<typename T, typename... Ts>
 HOST_DEVICE
 CSoAPtr<T, Ts...>::
-CSoAPtr(xlib::byte_t* const ptr, const int num_items) noexcept :
+CSoAPtr(xlib::byte_t* const ptr, const unsigned num_items) noexcept :
 _ptr(ptr),
 _num_items(num_items) {}
 
@@ -521,7 +521,7 @@ template<typename T, typename... Ts>
 HOST_DEVICE
 SoARef<CSoAPtr<T, Ts...>>
 CSoAPtr<T, Ts...>::
-operator[](const int& index)  noexcept {
+operator[](const unsigned& index)  noexcept {
     return SoARef<CSoAPtr<T, Ts...>>(*this, index);
 }
 
@@ -548,7 +548,7 @@ _ptr(nullptr), _num_items(0) {}
 template<typename T>
 HOST_DEVICE
 CSoAPtr<T>::
-CSoAPtr(xlib::byte_t* const ptr, const int num_items) noexcept :
+CSoAPtr(xlib::byte_t* const ptr, const unsigned num_items) noexcept :
 _ptr(ptr),
 _num_items(num_items) {}
 
@@ -574,7 +574,7 @@ template<typename T>
 HOST_DEVICE
 SoARef<CSoAPtr<T>>
 CSoAPtr<T>::
-operator[](const int& index)  noexcept {
+operator[](const unsigned& index)  noexcept {
     return SoARef<CSoAPtr<T>>(*this, index);
 }
 

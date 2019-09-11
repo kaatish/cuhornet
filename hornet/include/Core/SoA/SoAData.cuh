@@ -52,9 +52,9 @@ template <typename, DeviceType = DeviceType::DEVICE> class CSoAData;
 template<typename... Ts, DeviceType device_t>
 class SoAData<TypeList<Ts...>, device_t> {
     template<typename, DeviceType> friend class SoAData;
-    int           _num_items;
+    unsigned           _num_items;
 
-    int            _capacity;
+    unsigned            _capacity;
 
     SoAPtr<Ts...> _soa;
 
@@ -66,7 +66,7 @@ class SoAData<TypeList<Ts...>, device_t> {
     typename thrust::device_vector<T>,
     typename thrust::host_vector<T>>::type;
 
-    SoAData(const int num_items = 0, bool initToZero = false) noexcept;
+    SoAData(const unsigned num_items = 0, bool initToZero = false) noexcept;
 
     ~SoAData(void) noexcept;
 
@@ -84,7 +84,7 @@ class SoAData<TypeList<Ts...>, device_t> {
     template<DeviceType d_t>
     void copy(const SoAData<TypeList<Ts...>, d_t>& other) noexcept;
 
-    void copy(SoAPtr<Ts...> other, const DeviceType other_d_t, const int other_num_items) noexcept;
+    void copy(SoAPtr<Ts...> other, const DeviceType other_d_t, const unsigned other_num_items) noexcept;
 
     template<DeviceType d_t>
     void append(const SoAData<TypeList<Ts...>, d_t>& other) noexcept;
@@ -94,9 +94,9 @@ class SoAData<TypeList<Ts...>, device_t> {
     template <typename degree_t>
     void gather(SoAData<TypeList<Ts...>, device_t>& other, const Map<degree_t>& map) noexcept;
 
-    int get_num_items(void) noexcept;
+    unsigned get_num_items(void) noexcept;
 
-    void resize(const int resize_items) noexcept;
+    void resize(const unsigned resize_items) noexcept;
 
     DeviceType get_device_type(void) noexcept;
 
@@ -106,14 +106,14 @@ class SoAData<TypeList<Ts...>, device_t> {
 template<typename... Ts, DeviceType device_t>
 class CSoAData<TypeList<Ts...>, device_t> {
     template<typename, DeviceType> friend class CSoAData;
-    int            _num_items;
+    unsigned            _num_items;
 
-    int             _capacity;
+    unsigned             _capacity;
 
     CSoAPtr<Ts...> _soa;
 
     public:
-    CSoAData(const int num_items = 0) noexcept;
+    CSoAData(const unsigned num_items = 0) noexcept;
 
     ~CSoAData(void) noexcept;
 
@@ -135,16 +135,16 @@ class CSoAData<TypeList<Ts...>, device_t> {
 
     const CSoAPtr<Ts...>& get_soa_ptr(void) const noexcept;
 
-    void copy(SoAPtr<Ts const...> other, DeviceType other_d_t, int other_num_items) noexcept;
+    void copy(SoAPtr<Ts const...> other, DeviceType other_d_t, unsigned other_num_items) noexcept;
 
-    void copy(SoAPtr<Ts...> other, DeviceType other_d_t, int other_num_items) noexcept;
+    void copy(SoAPtr<Ts...> other, DeviceType other_d_t, unsigned other_num_items) noexcept;
 
     template<DeviceType d_t>
     void copy(CSoAData<TypeList<Ts...>, d_t>&& other) noexcept;
 
-    int get_num_items(void) noexcept;
+    unsigned get_num_items(void) noexcept;
 
-    void resize(const int resize_items) noexcept;
+    void resize(const unsigned resize_items) noexcept;
 
     DeviceType get_device_type(void) noexcept;
 };

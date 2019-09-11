@@ -85,12 +85,12 @@ public:
     SoARef(const SoARef<Contnr<Ts...>>& other) noexcept;
 
     HOST_DEVICE
-    SoARef(Contnr<Ts...>& soa, const int& index) noexcept;
+    SoARef(Contnr<Ts...>& soa, const unsigned& index) noexcept;
 
 private:
 
     Contnr<Ts...>&  _soa;
-    const int     _index;
+    const unsigned     _index;
 };
 
 //==============================================================================
@@ -124,7 +124,7 @@ public:
     void set(T* const ptr) noexcept;
 
     HOST_DEVICE
-    SoARef<SoAPtr<T>> operator[](const int& index) noexcept;
+    SoARef<SoAPtr<T>> operator[](const unsigned& index) noexcept;
 
 private:
     T* _ptr;
@@ -167,7 +167,7 @@ public:
     void set(typename std::enable_if<N != 0, typename xlib::SelectType<N, T* const, Ts* const...>::type>::type ptr) noexcept;
 
     HOST_DEVICE
-    SoARef<SoAPtr<T, Ts...>> operator[](const int& index) noexcept;
+    SoARef<SoAPtr<T, Ts...>> operator[](const unsigned& index) noexcept;
 
     HOST_DEVICE
     SoAPtr<Ts...> get_tail(void) noexcept;
@@ -193,7 +193,7 @@ public:
     explicit CSoAPtr() noexcept;
 
     HOST_DEVICE
-    explicit CSoAPtr(xlib::byte_t* const ptr, const int num_items) noexcept;
+    explicit CSoAPtr(xlib::byte_t* const ptr, const unsigned num_items) noexcept;
 
     template<unsigned N>
     HOST_DEVICE
@@ -206,11 +206,11 @@ public:
     get() const noexcept;
 
     HOST_DEVICE
-    SoARef<CSoAPtr<T>> operator[](const int& index) noexcept;
+    SoARef<CSoAPtr<T>> operator[](const unsigned& index) noexcept;
 
 private:
     xlib::byte_t* _ptr;
-    int           _num_items;
+    unsigned           _num_items;
 };
 
 template<typename T, typename... Ts>
@@ -221,7 +221,7 @@ public:
     explicit CSoAPtr() noexcept;
 
     HOST_DEVICE
-    explicit CSoAPtr(xlib::byte_t* const ptr, const int num_items) noexcept;
+    explicit CSoAPtr(xlib::byte_t* const ptr, const unsigned num_items) noexcept;
 
     template<unsigned N>
     HOST_DEVICE
@@ -234,14 +234,14 @@ public:
     get() const noexcept;
 
     HOST_DEVICE
-    SoARef<CSoAPtr<T, Ts...>> operator[](const int& index) noexcept;
+    SoARef<CSoAPtr<T, Ts...>> operator[](const unsigned& index) noexcept;
 
     HOST_DEVICE
     CSoAPtr<Ts...> get_tail(void) noexcept;
 
 private:
     xlib::byte_t* _ptr;
-    int           _num_items;
+    unsigned           _num_items;
 };
 
 }//namespace hornet

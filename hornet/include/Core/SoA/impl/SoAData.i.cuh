@@ -43,7 +43,7 @@ namespace hornet {
 
 //Avoiding specialization for hornetsnest
 template<DeviceType device_t>
-xlib::byte_t* allocate(const typename std::enable_if<(device_t == DeviceType::DEVICE), int>::type
+xlib::byte_t* allocate(const typename std::enable_if<(device_t == DeviceType::DEVICE), size_t>::type
         num_bytes) {
     xlib::byte_t* ptr = nullptr;
     if (num_bytes > 0) {
@@ -61,7 +61,7 @@ void deallocate(typename std::enable_if<(device_t == DeviceType::DEVICE), xlib::
 }
 
 template<DeviceType device_t>
-xlib::byte_t* allocate(const typename std::enable_if<(device_t == DeviceType::HOST), int>::type
+xlib::byte_t* allocate(const typename std::enable_if<(device_t == DeviceType::HOST), size_t>::type
         num_bytes) {
     xlib::byte_t* ptr = nullptr;
     if (num_bytes > 0) {
@@ -86,7 +86,7 @@ void deallocate(typename std::enable_if<(device_t == DeviceType::HOST), xlib::by
 template<int N, DeviceType device_t>
 struct AllocateBuffer {
     template<template <typename...> typename Contnr, typename... Ts>
-    static void allocate(Contnr<Ts...>& c, const int num_items) {
+    static void allocate(Contnr<Ts...>& c, const unsigned num_items) {
         typename xlib::SelectType<N, Ts*...>::type ptr;
         cuMalloc(ptr, num_items);
         c.template set<N>(ptr);
@@ -96,7 +96,7 @@ struct AllocateBuffer {
 template<int N>
 struct AllocateBuffer<N, DeviceType::HOST> {
     template<template <typename...> typename Contnr, typename... Ts>
-    static void allocate(Contnr<Ts...>& c, const int num_items) {
+    static void allocate(Contnr<Ts...>& c, const unsigned num_items) {
         using val_t = typename xlib::SelectType<N, Ts...>::type;
         val_t* ptr = new val_t[num_items];
         c.template set<N>(ptr);
@@ -159,7 +159,7 @@ struct RecursiveMove<N, N, device_t> {
 template<int N, int SIZE, DeviceType device_t>
 struct RecursiveAllocate {
     template<template <typename...> typename Contnr, typename... Ts>
-    static void allocate(Contnr<Ts...>& c, const int num_items) {
+    static void allocate(Contnr<Ts...>& c, const unsigned num_items) {
         AllocateBuffer<N, device_t>::allocate(c, num_items);
         RecursiveAllocate<N+1, SIZE, device_t>::allocate(c, num_items);
     }
@@ -168,7 +168,7 @@ struct RecursiveAllocate {
 template<int N, DeviceType device_t>
 struct RecursiveAllocate<N, N, device_t> {
     template<template <typename...> typename Contnr, typename... Ts>
-    static void allocate(Contnr<Ts...>& c, const int num_items) {
+    static void allocate(Contnr<Ts...>& c, const unsigned num_items) {
         AllocateBuffer<N, device_t>::allocate(c, num_items);
     }
 };
@@ -227,13 +227,13 @@ struct DevicePrint {
     static void print(
             T * src,
             DeviceType src_device_type,
-            int num_items) {
+            unsigned num_items) {
         if (src_device_type == DeviceType::DEVICE) {
           //std::cout<<"TODO : Implement\n";
           auto sptr = thrust::device_pointer_cast(src);
           thrust::copy(sptr, sptr + num_items, std::ostream_iterator<T>(std::cout, " "));
         } else if (src_device_type == DeviceType::HOST) {
-            for (int i = 0; i < num_items; ++i) {
+            for (unsigned i = 0; i < num_items; ++i) {
                 std::cout<<src[i]<<" ";
             }
         }
@@ -248,7 +248,7 @@ struct RecursivePrint {
     static void print(
             const SrcContnr<Ts...>& src,
             const DeviceType src_device_type,
-            const int num_items) {
+            const unsigned num_items) {
         std::cout<<"N : "<<N<<" | ";
         DevicePrint::print(
                 src.template get<N>(), src_device_type,
@@ -263,7 +263,7 @@ struct RecursivePrint {
     static void print(
             const SrcContnr<Ts const...>& src,
             const DeviceType src_device_type,
-            const int num_items) {
+            const unsigned num_items) {
         std::cout<<"N : "<<N<<" | ";
         DevicePrint::print(
                 src.template get<N>(), src_device_type,
@@ -281,7 +281,7 @@ struct RecursivePrint<N, N> {
     static void print(
             const SrcContnr<Ts...>& src,
             const DeviceType src_device_type,
-            const int num_items) {
+            const unsigned num_items) {
         std::cout<<"N : "<<N<<" | ";
         DevicePrint::print(
                 src.template get<N>(), src_device_type,
@@ -295,7 +295,7 @@ struct RecursivePrint<N, N> {
     static void print(
             const SrcContnr<Ts const...>& src,
             const DeviceType src_device_type,
-            const int num_items) {
+            const unsigned num_items) {
         std::cout<<"N : "<<N<<" | ";
         DevicePrint::print(
                 src.template get<N>(), src_device_type,
@@ -311,7 +311,7 @@ struct RecursivePrint<N, N> {
 
 template<typename... Ts, DeviceType device_t>
 SoAData<TypeList<Ts...>, device_t>::
-SoAData(const int num_items, bool initToZero) noexcept :
+SoAData(const unsigned num_items, bool initToZero) noexcept :
 _num_items(num_items), _capacity(num_items) {
     if (num_items != 0) {
         RecursiveAllocate<0, sizeof...(Ts) - 1, device_t>::allocate(_soa, _capacity);
@@ -377,15 +377,15 @@ template<DeviceType d_t>
 void
 SoAData<TypeList<Ts...>, device_t>:://TODO remove get_soa_ptr because SoAData<typename, DeviceType> is friend
 copy(const SoAData<TypeList<Ts...>, d_t>& other) noexcept {
-    int _item_count = std::min(other._num_items, _num_items);
+    unsigned _item_count = std::min(other._num_items, _num_items);
     RecursiveCopy<0, sizeof...(Ts) - 1>::copy(other._soa, d_t, _soa, device_t, _item_count);
 }
 
 template<typename... Ts, DeviceType device_t>
 void
 SoAData<TypeList<Ts...>, device_t>:://TODO remove get_soa_ptr because SoAData<typename, DeviceType> is friend
-copy(SoAPtr<Ts...> other, const DeviceType other_d_t, const int other_num_items) noexcept {
-    int _item_count = std::min(other_num_items, _num_items);
+copy(SoAPtr<Ts...> other, const DeviceType other_d_t, const unsigned other_num_items) noexcept {
+    unsigned _item_count = std::min(other_num_items, _num_items);
     RecursiveCopy<0, sizeof...(Ts) - 1>::copy(other._soa, other_d_t, _soa, device_t, _item_count);
 }
 
@@ -403,7 +403,7 @@ template<typename... Ts, DeviceType device_t>
 void
 SoAData<TypeList<Ts...>, device_t>::
 sort(void) noexcept {
-  thrust::device_vector<int> range;
+  thrust::device_vector<unsigned> range;
   if (sizeof...(Ts) > 3) {
     SoAPtr<Ts...> temp_soa;
     RecursiveAllocate<0, sizeof...(Ts) - 1, device_t>::allocate(temp_soa, _num_items);
@@ -425,7 +425,7 @@ gather(SoAData<TypeList<Ts...>, device_t>& other, const Map<degree_t>& map) noex
 }
 
 template<typename... Ts, DeviceType device_t>
-int
+unsigned
 SoAData<TypeList<Ts...>, device_t>::
 get_num_items(void) noexcept {
     return _num_items;
@@ -434,7 +434,7 @@ get_num_items(void) noexcept {
 template<typename... Ts, DeviceType device_t>
 void
 SoAData<TypeList<Ts...>, device_t>::
-resize(const int resize_items) noexcept {
+resize(const unsigned resize_items) noexcept {
     if (resize_items > _capacity) {
         SoAPtr<Ts...> temp_soa;
         RecursiveAllocate<0, sizeof...(Ts) - 1, device_t>::allocate(temp_soa, resize_items);
@@ -467,7 +467,7 @@ setEmpty(void) noexcept {
 
 template<typename... Ts, DeviceType device_t>
 CSoAData<TypeList<Ts...>, device_t>::
-CSoAData(const int num_items) noexcept :
+CSoAData(const unsigned num_items) noexcept :
 _num_items(num_items), _capacity(xlib::upper_approx<512>(num_items)),
 _soa(allocate<device_t>(xlib::SizeSum<Ts...>::value * _capacity), _capacity) {}
 
@@ -538,16 +538,16 @@ get_soa_ptr(void) const noexcept {
 template<typename... Ts, DeviceType device_t>
 void
 CSoAData<TypeList<Ts...>, device_t>::
-copy(SoAPtr<Ts const...> other, DeviceType other_d_t, int other_num_items) noexcept {
-    int _item_count = std::min(other_num_items, _num_items);
+copy(SoAPtr<Ts const...> other, DeviceType other_d_t, unsigned other_num_items) noexcept {
+    unsigned _item_count = std::min(other_num_items, _num_items);
     RecursiveCopy<0, sizeof...(Ts) - 1>::copy(other, other_d_t, _soa, device_t, _item_count);
 }
 
 template<typename... Ts, DeviceType device_t>
 void
 CSoAData<TypeList<Ts...>, device_t>::
-copy(SoAPtr<Ts...> other, DeviceType other_d_t, int other_num_items) noexcept {
-    int _item_count = std::min(other_num_items, _num_items);
+copy(SoAPtr<Ts...> other, DeviceType other_d_t, unsigned other_num_items) noexcept {
+    unsigned _item_count = std::min(other_num_items, _num_items);
     RecursiveCopy<0, sizeof...(Ts) - 1>::copy(other, other_d_t, _soa, device_t, _item_count);
 }
 
@@ -567,14 +567,14 @@ copy(CSoAData<TypeList<Ts...>, d_t>&& other) noexcept {
                     _soa.template get<0>()), device_t,
                 xlib::SizeSum<Ts...>::value * other._capacity);
     } else {
-        int _item_count = std::min(other._num_items, _num_items);
+        unsigned _item_count = std::min(other._num_items, _num_items);
         RecursiveCopy<0, sizeof...(Ts) - 1>::copy(
                 other.get_soa_ptr(), d_t, _soa, device_t, _item_count);
     }
 }
 
 template<typename... Ts, DeviceType device_t>
-int
+unsigned
 CSoAData<TypeList<Ts...>, device_t>::
 get_num_items(void) noexcept {
     return _num_items;
@@ -583,8 +583,8 @@ get_num_items(void) noexcept {
 template<typename... Ts, DeviceType device_t>
 void
 CSoAData<TypeList<Ts...>, device_t>::
-resize(const int resize_items) noexcept {
-    int new_capacity = xlib::upper_approx<512>(resize_items);
+resize(const unsigned resize_items) noexcept {
+    unsigned new_capacity = xlib::upper_approx<512>(resize_items);
     if (new_capacity > _capacity) {
         CSoAPtr<Ts...> temp_soa(
                 allocate<device_t>(xlib::SizeSum<Ts...>::value * new_capacity),
